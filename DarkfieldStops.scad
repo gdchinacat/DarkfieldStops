@@ -12,8 +12,10 @@ steps=.8;         // how much to increment stop size by
 spacing = 5;    // mm between stops when laid out
 
 // advanced features
-//$fn=360;
+$fn=360;
 smoothing = 1.2;  // the radius of intersections of spokes
+fudge = .01; // used to extend the difference volumes beyond the boundary to improve preview
+text_depth = .8;
 
 
 grid(start, steps, end);
@@ -52,12 +54,19 @@ module ring(od, id) {
 
 //stop creates an individual centered stop
 module stop(od, id, h, stop_size) {
-  linear_extrude(h) {
-    offset(r=-smoothing) {
-      ring(od+2*smoothing, id-2*smoothing); //adjust for negative smoothing
-      circle(stop_size/2 + smoothing);
-      spokes(id, spoke_count, (diameter-aperture)/2+2*smoothing);
+  difference() {
+    linear_extrude(h) {
+      offset(r=-smoothing) {
+        ring(od+2*smoothing, id-2*smoothing); //adjust for negative smoothing
+        circle(stop_size/2 + smoothing);
+        spokes(id, spoke_count, (diameter-aperture)/2+2*smoothing);
+      }
     }
+    translate([0,0,h-text_depth+fudge])
+      linear_extrude(text_depth) 
+        text(str(stop_size), size=3, 
+          font=":style=Bold", spacing=1,
+          halign="center", valign="center");
   }
 }
 
