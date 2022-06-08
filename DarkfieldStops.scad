@@ -1,16 +1,20 @@
-$fn=90;
 
-diameter = 35.4; // mm for outer diameter of stop
-thickness = 2.2;
-ring_width = 2;
-spoke_width = 1;
-spoke_count = 3;
+// filter parameters
+diameter = 35.4; // the size of  the filter (mm)
+thickness = 3;   // the thickness of the filter (mm)
+aperture = 32;   // the size of the aperture (mm)
+spoke_count = 3; // the number of spokes to support the stop
 
 // set creation
 start=6;         // mm for smallest stop
 end=22;          // mm fo largest stop (ish...based on steps)
 steps=.8;         // how much to increment stop size by
 spacing = 5;    // mm between stops when laid out
+
+// advanced features
+//$fn=360;
+smoothing = 1.2;  // the radius of intersections of spokes
+
 
 grid(start, steps, end);
 
@@ -21,33 +25,39 @@ module grid(start, steps, end) {
         x = i % width;
         y = floor(i / width);
         translate([x * (diameter + spacing), y * (diameter + spacing), 0]) {
-            stop(diameter, thickness, start + i * steps);
+            stop(diameter, aperture, thickness, start + i * steps);
         }
     }
 }
 
-module spokes(d, h, n) {
-    for(deg = [0:360/n:360]) { //math is easier to just do 0 and 360
-        rotate(deg) {
-            translate([0, d/4, 0]){ // shift it half the radius to start at center
-                cube([spoke_width, d/2, h], center=true);
-            }
-        }
+//spokes creates the "spokes" from the center of the stop to the diameter 
+//(typically inside diameter of stop)).
+module spokes(diameter, n, spoke_width) {
+  r = diameter/2;
+  for(deg = [0:360/n:360]) { //math is easier to just do 0 and 360
+    rotate(deg) {
+      translate([0, r/2]){
+        square([spoke_width, r], center=true);
+      }
     }
+  }
 }
 
-
-//ring creates a centered ring that is d mm in diameter, t mm thick, and h mm in height.
-module ring(d, t, h) {
-    difference(){
-        cylinder(h=h, r=d/2, center=true);
-        cylinder(h=h+.2, r=d/2-t, center=true);
-    }
+module ring(od, id) {
+  difference(){
+    circle(r=od/2);
+    circle(r=id/2);
+  }
 }
 
-module stop(d, h, s) {
-        ring(d, ring_width, h);
-        cylinder(h=h, r=s/2, center=true);
-        spokes(d-ring_width*2, h, spoke_count);
+//stop creates an individual centered stop
+module stop(od, id, h, stop_size) {
+  linear_extrude(h) {
+    offset(r=-smoothing) {
+      ring(od+2*smoothing, id-2*smoothing); //adjust for negative smoothing
+      circle(stop_size/2 + smoothing);
+      spokes(id, spoke_count, (diameter-aperture)/2+2*smoothing);
+    }
+  }
 }
 
