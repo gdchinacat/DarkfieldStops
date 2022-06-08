@@ -9,26 +9,29 @@ spoke_count = 3; // the number of spokes to support the stop
 start=6;     // mm for smallest stop
 end=22;      // mm fo largest stop (ish...based on steps)
 steps=.8;    // how much to increment stop size by
-spacing = 0; // mm between filters  when laid out in grid
+spacing = 5; // mm between filters  when laid out in grid
 
 // Main. Comment out to use the tests below.
-//grid(start, steps, end, ys=5*diameter/4);
+grid(start, steps, end, ys=5*diameter/4);
 
 // advanced features
 $fn=360;
-smoothing = 0.0; // the radius of intersections of spokes
+smoothing = 0.5; // the radius of intersections of spokes
 fudge = .01; // used to extend the difference volumes beyond the boundary to improve preview
+text_size = 5;
 text_depth = .8;
 
 // Using animation verify that with changing _smoothing the body doesn't change.
 // Uncomment one by one and run animation.
 
-//_smoothing = min((aperture-end)/4, ((diameter-aperture)/2 * $t)); offset(r=-_smoothing) body(diameter, aperture, _smoothing);
-//stop(diameter, aperture, thickness, end - $t*(end-start));
-//stop(diameter, aperture, thickness, end, smoothing=min((aperture-end)/4, ((diameter-aperture)/2 * $t)));
+// basic body shape tests
+//body(diameter + (diameter - aperture) * $t, aperture + (diameter - aperture) * $t); // changing diameter and aperture
 
-//test smoothing works
+//stop(diameter, aperture, thickness, end - $t*(end-start));
+
+//test smoothing works (start and end for extremes)
 //stop(diameter, aperture, thickness, start, smoothing=min((aperture-end)/4, ((diameter-aperture)/2 * $t)));
+//stop(diameter, aperture, thickness, end, smoothing=min((aperture-end)/4, ((diameter-aperture)/2 * $t)));
 
 //Test grid spacing.
 //grid(start, steps, end, ys=5*diameter/4, spacing=diameter/2*$t);
@@ -38,6 +41,7 @@ text_depth = .8;
 module grid(start, steps, end, xs=diameter, ys=diameter, spacing=spacing) {
   c = floor((end - start)/steps);
   width = ceil(sqrt(c));
+  translate([(xs+spacing)/2, (ys+spacing)/2])
   for(i=[0:c-1]) {
     x = i % width;
     y = floor(i / width);
@@ -59,16 +63,16 @@ module spokes(diameter, n, spoke_width) {
   }
 }
 
-module body(od, id, padding) {
-  y = od*3/4 + padding;
-  rod = od/2 + padding;
+module body(od, id) {
+  y = od*3/4;
+  rod = od/2;
   difference(){
-    hull() {
-      circle(r=rod);
-      translate([-rod, -y])
-        square([2*rod, y]);
+    union() {
+      circle(r=rod);        // the "filter" body
+      translate([-rod, -y]) // the handle
+        square([od, y]);
     }
-    circle(r=id/2-padding);
+    circle(r=id/2);         // the aperture
   }
 }
 
@@ -77,16 +81,16 @@ module stop(od, id, h, size, smoothing=smoothing) {
   difference() {
     linear_extrude(h) {
       offset(r=-smoothing) { 
-            #body(od, id, smoothing); //adjust for negative smoothing
-            circle(size/2 + smoothing);
+            offset(delta=smoothing)
+            	body(od, id);
+            circle(size/2 + smoothing); // the actual stop
             spokes(id, spoke_count, (od-id)/2+2*smoothing);
       }
     }
-    translate([0,0,h-text_depth+fudge])
+    translate([0,-od/2,h-text_depth+fudge])
       linear_extrude(text_depth) 
-        text(str(size), size=3, 
-          font=":style=Bold", spacing=1,
-          halign="center", valign="center");
+        text(str(size), size=text_size, 
+          font=":style=Bold", halign="center", valign="top");
   }
 }
 
