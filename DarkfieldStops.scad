@@ -12,10 +12,10 @@ steps=.8;    // how much to increment stop size by
 spacing = 5; // mm between filters  when laid out in grid
 
 // Main. Comment out to use the tests below.
-grid(start, steps, end, ys=5*diameter/4);
+//grid(start, steps, end, ys=5*diameter/4);
 
 // advanced features
-$fn=360;
+//$fn=360;
 smoothing = 0.5; // the radius of intersections of spokes
 fudge = .01; // used to extend the difference volumes beyond the boundary to improve preview
 text_size = 5;
@@ -27,20 +27,22 @@ text_depth = .8;
 // basic body shape tests
 //body(diameter + (diameter - aperture) * $t, aperture + (diameter - aperture) * $t); // changing diameter and aperture
 
-//stop(diameter, aperture, thickness, end - $t*(end-start));
+//stop(diameter, aperture, thickness, end - $t*(end-start), smoothing=min((aperture-end)/4, ((diameter-aperture)/2 * (1-$t))));
 
 //test smoothing works (start and end for extremes)
 //stop(diameter, aperture, thickness, start, smoothing=min((aperture-end)/4, ((diameter-aperture)/2 * $t)));
 //stop(diameter, aperture, thickness, end, smoothing=min((aperture-end)/4, ((diameter-aperture)/2 * $t)));
 
 //Test grid spacing.
-//grid(start, steps, end, ys=5*diameter/4, spacing=diameter/2*$t);
+grid(start, steps, end, ys=5*diameter/4, spacing=diameter/2*$t);
 
 
 
-module grid(start, steps, end, xs=diameter, ys=diameter, spacing=spacing) {
+module grid(start, steps, end, xs=diameter, ys=diameter, spacing=spacing,
+maxwidth=200, square=true) {
   c = floor((end - start)/steps);
-  width = ceil(sqrt(c));
+  width = square ? ceil(sqrt(c)) : floor((maxwidth*1.0)/(xs+spacing));
+echo(width);
   translate([(xs+spacing)/2, (ys+spacing)/2])
   for(i=[0:c-1]) {
     x = i % width;
