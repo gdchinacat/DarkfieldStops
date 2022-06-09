@@ -6,8 +6,9 @@ aperture = 32;   // the size of the aperture (mm)
 spoke_count = 3; // the number of spokes to support the stop
 
 // set creation
-start=6;     // mm for smallest stop
-end=22;      // mm fo largest stop (ish...based on steps)
+start=15; end=15; // to do a single stop
+//start=6;     // mm for smallest stop
+//end=22;      // mm fo largest stop (ish...based on steps)
 steps=.8;    // how much to increment stop size by
 spacing = 5; // mm between filters  when laid out in grid
 
@@ -37,14 +38,12 @@ text_depth = .8;
 grid(start, steps, end, ys=5*diameter/4, spacing=diameter/2*$t);
 
 
-
 module grid(start, steps, end, xs=diameter, ys=diameter, spacing=spacing,
 maxwidth=200, square=true) {
-  c = floor((end - start)/steps);
+  c = floor(1 + (end - start)/steps);
   width = square ? ceil(sqrt(c)) : floor((maxwidth*1.0)/(xs+spacing));
-echo(width);
   translate([(xs+spacing)/2, (ys+spacing)/2])
-  for(i=[0:c-1]) {
+  for(i=[0:1:c-1]) {
     x = i % width;
     y = floor(i / width);
     translate([x * (xs + spacing), y * (ys + spacing), 0])
@@ -56,7 +55,7 @@ echo(width);
 //(typically inside diameter of stop)).
 module spokes(diameter, n, spoke_width) {
   r = diameter/2;
-  for(deg = [0:360/n:360]) { //math is easier to just do 0 and 360
+  for(deg = [0:360/n:360]) { //math is easier to just do both 0 and 360
     rotate(deg) {
       translate([0, r/2]){
         square([spoke_width, r], center=true);
