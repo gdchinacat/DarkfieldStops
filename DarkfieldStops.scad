@@ -1,7 +1,7 @@
 
 // filter parameters
-diameter = 35.4; // the size of  the filter (mm)
-thickness = 3;   // the thickness of the filter (mm)
+diameter = 35.3; // the size of  the filter (mm)
+thickness = 2.9; // the thickness of the filter (mm)
 aperture = 32;   // the size of the aperture (mm)
 spoke_count = 3; // the number of spokes to support the stop
 
